@@ -13,7 +13,7 @@ async function main() {
     const monitor = new Monitor(config);
     const app = createServer(monitor);
 
-    const server = app.listen(config.port, () => {
+    const server = app.listen(config.port, config.listenHost || '127.0.0.1', () => {
         logger.ok(`Web UI running at http://localhost:${config.port}`);
     });
 

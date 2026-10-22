@@ -68,11 +68,11 @@ if errorlevel 1 (
 )
 
 rem ---------- 4. Start ----------
-echo [4/4] Starting the app...
+echo [4/4] Handing over to the Python web app...
 echo       Your browser will open at http://localhost:3000 shortly.
 echo       This window stays open while the app runs - keep it open,
 echo       or close it (then press any key) to stop the app.
-start "" powershell -NoProfile -Command "Start-Sleep -Seconds 10; Start-Process 'http://localhost:3000'"
-call npm.cmd start
+start "" powershell -NoProfile -Command "Start-Sleep -Seconds 5; Start-Process 'http://localhost:8000'"
+call start-web.bat
 popd
 pause

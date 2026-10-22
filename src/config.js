@@ -8,6 +8,10 @@ const DEFAULTS = {
     sessionDir: './.wwebjs_auth',
     stateFile: './.state.json',
     port: 3000,
+    // The engine is an internal worker driven by app.py (the Python main app).
+    // Keep it on loopback unless you deliberately expose it.
+    listenHost: '127.0.0.1',
+    password: '',
     groupNames: [],
     includeImages: true,
     includeVideos: true,

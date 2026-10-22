@@ -20,6 +20,7 @@ tools/
 node_modules/
 
 # --- Dev experiments & logs (not part of the published tool) ---
+.venv/
 *.log
 *.err
 *.out

@@ -1,30 +1,32 @@
 @echo off
 setlocal EnableExtensions
 title WhatsApp Photo Saver - share on the internet
+
+rem The Python main app listens on port 8000 (start-web.bat must be running).
+
 echo ============================================================
 echo    WhatsApp Photo Saver - share with coworkers anywhere
 echo ============================================================
-echo    This opens your app to the internet through a free
-echo    Cloudflare tunnel. IT sees a normal HTTPS site; nothing
-echo    is installed system-wide (cloudflared.exe lives next to
-echo    this file) and you can stop sharing by closing this.
+echo    This opens the Python web app (port 8000) to the internet
+echo    through a free Cloudflare tunnel. Nothing is installed
+echo    system-wide and you can stop sharing by closing this.
 echo.
-echo    NOTE: set a password in config.json ("password": "...") first,
-echo    or ANYONE with the link can control the app.
+echo    SECURITY: set "password" in config.json first, or ANYONE
+echo    with the link can control the app.
 echo ============================================================
 echo.
 
 cd /d "%~dp0"
 
-rem ---------- 1. The app should already be running ----------
-powershell -NoProfile -Command "try { $r = Invoke-WebRequest -Uri 'http://localhost:3000' -UseBasicParsing -TimeoutSec 5; exit 0 } catch { exit 1 }" >nul 2>&1
-if errorlevel 1 (
-    echo [!] The app is not running on http://localhost:3000 yet.
-    echo     Run start.bat first, let it open, then run share.bat again.
-    pause
-    exit /b 1
-)
-echo [1/3] App is running.
+rem ---------- 1. The web app should already be running ----------
+powershell -NoProfile -Command "try { $r = Invoke-WebRequest -Uri 'http://127.0.0.1:8000/login' -UseBasicParsing -TimeoutSec 5; exit 0 } catch { exit 1 }" >nul 2>&1
+if %errorlevel%==0 goto app_ok
+echo [!] The web app is not running on http://127.0.0.1:8000 yet.
+echo     Run start-web.bat first, let it open, then run share.bat again.
+pause
+exit /b 1
+:app_ok
+echo [1/3] Web app is running.
 
 rem ---------- 2. Get cloudflared (portable, no admin) ----------
 if not exist "tools" mkdir "tools"
@@ -41,17 +43,13 @@ if not exist "tools\cloudflared.exe" (
 )
 
 rem ---------- 3. Open the tunnel ----------
-echo [3/3] Opening the tunnel... watch for your share link below:
-echo.
-echo       -------------------------------------------------------------------
-echo       ^|  SHARE LINK will appear as ^"https://....trycloudflare.com^"  ^|
-echo       -------------------------------------------------------------------
-echo.
-echo       Scope note: the link changes every time you run share.bat.
-echo       Keep this window open while you want to share.
+echo [3/3] Opening the tunnel... your SHARE LINK appears below as
+echo       "https://<something>.trycloudflare.com"
+echo       Note: the link changes every time you run share.bat.
+echo       Keep this window open while you want the link alive.
 echo.
 
-tools\cloudflared.exe tunnel --url http://localhost:3000
+tools\cloudflared.exe tunnel --url http://127.0.0.1:8000
 
 echo.
 echo Tunnel closed - the share link is no longer reachable.

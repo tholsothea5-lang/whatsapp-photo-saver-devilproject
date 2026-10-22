@@ -30,7 +30,8 @@ saves every image (and optionally video) to disk.
 - **Deduplication** – every downloaded media id is recorded in `.state.json`,
   so restarting never downloads the same photo twice.
 - **Web UI** – live activity feed, group picker and download list on
-  `http://localhost:3000`.
+  `http://localhost:8000` (Python main app; the engine itself is engine-only
+  on loopback port 3000).
 
 ## Requirements
 
@@ -45,21 +46,21 @@ git clone https://github.com/tholsothea5-lang/whatsapp-photo-saver-devilproject.
 cd whatsapp-photo-saver-devilproject
 ```
 
-**Windows:** double-click `start.bat` — it installs everything on first
-run, then starts the app.
+**Windows:** double-click `start-web.bat` — it installs the engine and the
+Python app on first run, then starts them both.
 
-**macOS / Linux:** run `sh start.sh`.
+**macOS / Linux:** run `sh start.sh` (engine only; run `pip install -r requirements.txt && python app.py` in a venv for the Python layer).
 
-Or the classic way:
+Or the classic way (engine only):
 
 ```bash
 npm install
 npm start
 ```
 
-Then open <http://localhost:3000>, scan the QR code, tick the groups you
-want, pick a date range and press **Download range** (the ticked chats are
-saved automatically).
+Then open <http://localhost:8000> (the Python web app), scan the QR code,
+tick the groups you want, pick a date range and press **Download range**
+(the ticked chats are saved automatically).
 
 > On PowerShell you may need `npm.cmd start` if script execution is disabled.
 
@@ -67,12 +68,13 @@ saved automatically).
 
 1. Set a password in `config.json` (`"password": "our-team-code"`) — **do this
    first**, otherwise whoever gets the link can change the group selection.
-2. Start the app (`start.bat` / `npm start`).
-3. Run `share.bat` — it opens a free Cloudflare HTTPS tunnel on your PC and
-   prints a `https://<something>.trycloudflare.com` link. Anyone can open
-   that link, sign in with the password, and use the app in their browser.
-   The link changes each time you run `share.bat`; close the window to stop
-   sharing. No system-wide install: `cloudflared.exe` sits in `tools/`.
+2. Start everything (`start-web.bat`).
+3. Run `share.bat` — it opens a free Cloudflare HTTPS tunnel to the Python web
+   app (port 8000) on your PC and prints a `https://<something>.trycloudflare.com`
+   link. Anyone can open that link, sign in with the password, and use the app
+   in their browser. The link changes each time you run `share.bat`; close the
+   window to stop sharing. No system-wide install: `cloudflared.exe` sits in
+   `tools/`.
 
 The photos themselves keep landing in the download folder on the machine
 running the app — point `downloadDir` at a network/OneDrive folder if the
@@ -89,7 +91,8 @@ automatically when you save a group selection. All settings:
 | `downloadDir` | `./downloads` | Where files are stored |
 | `sessionDir` | `./.wwebjs_auth` | Stored WhatsApp session |
 | `stateFile` | `./.state.json` | Downloaded-id index (dedupe) |
-| `port` | `3000` | Web UI port |
+| `port` | `3000` | Engine port (internal, localhost only) |
+| `password` | *(empty)* | Shared web-access password. When empty the web UI is unguarded — **set this before sharing** |
 | `groupNames` | `[]` | Names of the groups to watch |
 | `includeImages` | `true` | Download photos |
 | `includeVideos` | `true` | Download videos |
@@ -138,15 +141,20 @@ deduplication and the HTTP API.
 ## Project layout
 
 ```
-index.js            entry point (starts the web server + WhatsApp client)
-start.bat / start.sh easy-start scripts (install on first run, then start)
+app.py              main web app (Python/FastAPI): password gate + reverse proxy
+index.js            engine entry point (starts the worker API + WhatsApp client)
+start-web.bat       one-click launcher: engine + Python app
+start.bat / start.sh engine-only easy-start scripts
+setup.bat           downloads + installs everything, then calls start-web.bat
+share.bat           publishes the web app to the internet (Cloudflare tunnel)
 src/config.js       configuration loading
 src/logger.js       small colored logger (CommonJS friendly)
 src/media.js        album resolution + encrypted media download/decrypt
 src/downloader.js   writes files, names them, handles dedupe
 src/store.js        JSON index of already-downloaded media
 src/monitor.js      WhatsApp client lifecycle, group discovery, back-fill
-src/server.js       Express REST + SSE API
+src/server.js       Express REST + SSE API (worker)
+src/password.js     shared-password gate (worker side, mirrors app.py)
 public/index.html   web UI
 test/               offline test suite
 ```
