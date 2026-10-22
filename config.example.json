@@ -1,0 +1,16 @@
+{
+  "downloadDir": "./downloads",
+  "sessionDir": "./.wwebjs_auth",
+  "stateFile": "./.state.json",
+  "port": 3000,
+  "groupNames": [],
+  "includeImages": true,
+  "includeVideos": true,
+  "includeDocuments": false,
+  "includeStickers": false,
+  "backfillOnStart": true,
+  "backfillLimit": 200,
+  "liveMonitoring": true,
+  "saveCaptionToMetadata": true,
+  "includeOwnMessages": false
+}

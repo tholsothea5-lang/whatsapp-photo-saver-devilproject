@@ -1,0 +1,59 @@
+# --- Secrets & personal data (NEVER commit these) ---
+# WhatsApp session data: contains your login, anyone with it can access your account
+.wwebjs_auth/
+.wwebjs_cache/
+.state.json
+
+# Your personal configuration (group names, local paths)
+config.json
+config.json.bak
+
+# Downloaded media / personal photo folders
+downloads/
+closing photos/
+dont want to close photos/
+
+# --- Dependencies & builds ---
+node_modules/
+
+# --- Dev experiments & logs (not part of the published tool) ---
+*.log
+*.err
+*.out
+*.out.txt
+*.pid
+diag*.js
+diag*.txt
+app_run*.log
+app_run*.err
+probe-*.js
+peek.js
+shot*.js
+diffup.*
+show-qr.js
+fetch-qr.js
+choose-qr.js
+verify-patch.js
+verify.patch.*
+cmp_versions.js
+upstream_Utils.js
+utils_diff.txt
+smoke.out.txt
+qr_art.txt
+qr_*.png
+qr_last.png
+scan-me.png
+close-modal.png
+ui.png
+game.png
+light.png
+status.json
+
+# One-off dev/QA scripts under scripts/ (keep patch-whatsapp-web.js & verify-folder.js)
+scripts/check-*.js
+scripts/debug-*.js
+scripts/test-*.js
+
+# --- OS junk ---
+Thumbs.db
+.DS_Store

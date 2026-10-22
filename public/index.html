@@ -1,0 +1,896 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>WhatsApp Photo Saver</title>
+<script>
+try { document.documentElement.dataset.theme = localStorage.getItem('theme') || 'dark'; }
+catch (e) { document.documentElement.dataset.theme = 'dark'; }
+</script>
+<style>
+  :root { --bg:#0f1417; --panel:#182126; --border:#2a3942; --text:#e9edef;
+          --muted:#8696a0; --accent:#25d366; --warn:#f1c40f; --chip:#22303a; }
+  html[data-theme="dark"] { color-scheme: dark; }
+  html[data-theme="light"] {
+    color-scheme: light;
+    --bg:#f3f6f4; --panel:#ffffff; --border:#cfdad4; --text:#10201a;
+    --muted:#5c7168; --accent:#0d8a45; --warn:#a87400; --chip:#e6eeea;
+  }
+  html[data-theme="light"] #revealFab,
+  html[data-theme="light"] #rangeDownload { color:#ffffff; }
+  input[type="checkbox"] { accent-color: var(--accent); }
+  * { box-sizing: border-box; }
+  body { margin:0; font-family:"Segoe UI",system-ui,sans-serif;
+         background:var(--bg); color:var(--text); }
+  header { padding:18px 24px; background:var(--panel); border-bottom:1px solid var(--border);
+           display:flex; align-items:center; gap:16px; flex-wrap:wrap; }
+  h1 { font-size:18px; margin:0; font-weight:600; }
+  .pill { padding:4px 12px; border-radius:999px; font-size:12px;
+          background:var(--chip); border:1px solid var(--border); }
+  button.pill { font:inherit; font-size:12px; cursor:pointer; color:var(--text); }
+  button.pill:hover { border-color:var(--accent); }
+  .pill.ok { background:rgba(37,211,102,.15); border-color:var(--accent); color:var(--accent); }
+  .pill.warn { background:rgba(241,196,15,.12); border-color:var(--warn); color:var(--warn); }
+  main { display:grid; grid-template-columns:1fr 1fr; gap:18px;
+         padding:0 24px 18px; align-items:start; }
+  main > section:nth-of-type(1) { grid-column:1 / -1; }
+  @media (max-width: 900px) {
+    main { grid-template-columns:1fr; }
+    main > section:nth-of-type(1) { grid-column:auto; }
+  }
+  section { background:var(--panel); border:1px solid var(--border);
+            border-radius:10px; padding:16px; }
+  h2 { font-size:14px; text-transform:uppercase; letter-spacing:.08em;
+       color:var(--muted); margin:0 0 12px; }
+  button { background:var(--accent); color:#062e14; border:0; border-radius:6px;
+           padding:8px 14px; font-weight:600; cursor:pointer; }
+  button.secondary { background:var(--chip); color:var(--text); border:1px solid var(--border); }
+  #groupSearch, #rangeSender, #rangeStart, #rangeEnd, #downloadDirInput {
+                 width:100%; padding:8px 10px; background:var(--bg);
+                 color:var(--text); border:1px solid var(--border); border-radius:6px; }
+  #groupSearch { margin-bottom:10px; }
+  .rangeRow { display:flex; gap:10px; flex-wrap:wrap; }
+  .rangeRow > label { flex:1 1 45%; color:var(--muted); font-size:12px; }
+  .profile { text-align:center; padding:12px 0; }
+  .avatar { width:96px; height:96px; border-radius:50%; object-fit:cover;
+            background:var(--chip); border:1px solid var(--border); display:inline-flex;
+            align-items:center; justify-content:center; font-size:34px; color:var(--muted); }
+  .profileName { margin:10px 0 2px; font-weight:600; }
+  /* Compact profile chip in the small login card (top-left). */
+  #qrArea .profile { display:grid; grid-template-columns:44px 1fr;
+            grid-template-areas:"avatar name" "avatar status";
+            column-gap:10px; align-items:center; text-align:left; padding:2px 0; }
+  #qrArea .avatar { grid-area:avatar; width:44px; height:44px; font-size:18px; }
+  #qrArea .profileName { grid-area:name; margin:0; font-size:14px; }
+  #qrArea .profile p.muted { grid-area:status; margin:2px 0 0; font-size:11px; }
+  #revealFab { position:fixed; right:24px; bottom:24px; z-index:50; display:none;
+               padding:12px 20px; border-radius:999px; font-size:14px;
+               box-shadow:0 8px 24px rgba(0,0,0,.45); }
+  #revealFab.show { display:inline-block; }
+  #downloadToast {
+    position: fixed; left: 24px; bottom: 24px; z-index: 85;
+    width: min(340px, calc(100vw - 48px));
+    background: var(--panel); color: var(--text);
+    border: 1px solid var(--accent); border-radius: 10px; padding: 14px;
+    box-shadow: 0 12px 34px rgba(0,0,0,.45);
+    display: none; flex-direction: column; gap: 8px;
+  }
+  #downloadToast.show { display: flex; }
+  #downloadToast .toast-title { font-weight: 600; font-size: 14px; color: var(--accent); }
+  #downloadToast .toast-body { font-size: 12px; color: var(--muted); }
+  #downloadToast .toast-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 4px; }
+  #closeModal {
+    position: fixed; inset: 0; z-index: 120; display: none;
+    align-items: center; justify-content: center; padding: 20px;
+    background: rgba(0,0,0,.72);
+  }
+  #closeModal.show { display: flex; }
+  .close-dialog {
+    position: relative; width: min(680px, 100%); background: var(--panel);
+    border: 1px solid var(--border); border-radius: 14px; padding: 20px;
+    box-shadow: 0 18px 50px rgba(0,0,0,.6);
+  }
+  .close-x {
+    position: absolute; top: 8px; right: 8px; background: transparent; border: 0;
+    color: var(--muted); font-size: 16px; cursor: pointer; padding: 4px 8px;
+  }
+  .close-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin: 16px 0; }
+  @media (max-width: 640px) { .close-grid { grid-template-columns: 1fr; } }
+  .close-choice {
+    position: relative; padding: 0; border: 1px solid var(--border);
+    border-radius: 10px; overflow: hidden; cursor: pointer;
+    background: var(--chip); min-height: 180px;
+  }
+  .close-choice:hover { border-color: var(--accent); }
+  .close-choice-bg {
+    position: absolute; inset: 0; background-size: cover; background-position: center;
+    background-image: linear-gradient(135deg, #22303a, #0f1417);
+  }
+  .close-choice-label {
+    position: relative; display: flex; align-items: flex-end; justify-content: center;
+    min-height: 180px; height: 100%; padding: 14px; color: #fff; font-weight: 600;
+    text-align: center; text-shadow: 0 1px 6px rgba(0,0,0,.9);
+    background: linear-gradient(transparent 30%, rgba(0,0,0,.78));
+  }
+  .close-final {
+    position: relative; width: min(1100px, 100%); max-height: 92vh;
+    border-radius: 14px; overflow: auto; background: rgba(0,0,0,.92);
+    border: 1px solid var(--border); display: flex; flex-direction: column;
+    box-shadow: 0 18px 50px rgba(0,0,0,.6);
+  }
+  .close-final[hidden] { display: none; }
+  .close-final-img {
+    display: block; width: auto; height: auto; max-width: 100%; max-height: 72vh;
+    margin: 0 auto; object-fit: contain; background: #000; cursor: zoom-in;
+  }
+  .close-final-panel {
+    position: relative; width: 100%; padding: 18px; color: #fff;
+    background: linear-gradient(transparent, rgba(0,0,0,.85));
+    display: flex; flex-direction: column; gap: 12px;
+  }
+  .close-final-panel p { margin: 0; font-size: 18px; text-shadow: 0 1px 6px rgba(0,0,0,.9); }
+  .close-final .secondary { background: rgba(0,0,0,.45); color:#fff; border-color: rgba(255,255,255,.4); }
+  ul { list-style:none; margin:0; padding:0; max-height:420px; overflow-y:auto; }
+  li { padding:8px 4px; border-bottom:1px solid var(--border);
+       display:flex; align-items:center; gap:10px; }
+  li:last-child { border-bottom:0; }
+  label { display:flex; align-items:center; gap:8px; cursor:pointer; }
+  #log { font-family:Consolas,monospace; font-size:12px; max-height:420px;
+         overflow-y:auto; white-space:pre-wrap; }
+  .logline { padding:2px 0; border-bottom:1px solid rgba(255,255,255,.04); }
+  .ok { color:var(--accent); } .err { color:#f15c6d; } .muted { color:var(--muted); }
+  #qrbox { display:flex; align-items:center; gap:12px; margin:18px 24px 0;
+           padding:10px 14px; max-width:500px; flex-wrap:wrap; }
+  #logoutBtn { margin-left:auto; }
+  #qrbox h2 { margin:0; font-size:11px; white-space:nowrap; }
+  #qrbox img { background:#fff; padding:10px; border-radius:8px; }
+  .stat { font-size:26px; font-weight:700; }
+  .stats { display:flex; gap:24px; }
+  .statwrap small { display:block; color:var(--muted); font-size:11px;
+                    text-transform:uppercase; letter-spacing:.06em; }
+  .bar { height:4px; background:var(--chip); border-radius:2px; margin-top:14px; }
+  .bar > div { height:100%; background:var(--accent); width:0; border-radius:2px;
+               transition:width .3s; }
+</style>
+</head>
+<body>
+<header>
+  <h1>WhatsApp Photo Saver</h1>
+  <span id="status" class="pill warn">Connecting…</span>
+  <span id="statSaved" class="pill">0 saved</span>
+  <span id="statSkipped" class="pill">0 skipped</span>
+  <span id="statFailed" class="pill">0 failed</span>
+  <button id="themeToggle" class="pill" type="button" title="Switch theme">☀ Light</button>
+  <button id="closeAppBtn" class="pill" type="button" title="Close the tool">Close the tool</button>
+</header>
+
+<section id="qrbox">
+  <h2>1 · Link WhatsApp</h2>
+  <div id="qrArea"><p class="muted">Waiting for QR code…</p></div>
+  <button id="logoutBtn" class="pill" type="button">Log out</button>
+</section>
+
+<main>
+  <section>
+    <h2>2 · Select Chats &amp; Download</h2>
+    <input id="groupSearch" type="search" placeholder="Search chats by name…"
+           autocomplete="off" spellcheck="false" />
+    <div class="row" style="margin-bottom:12px">
+      <button id="refresh" class="secondary">Rescan chats</button>
+      <span id="groupCount" class="muted" style="align-self:center"></span>
+    </div>
+    <div class="row" style="margin-bottom:12px;align-items:center">
+      <button id="tickAll" class="secondary">Tick all</button>
+      <button id="untickAll" class="secondary">Untick all</button>
+      <span id="tickedCount" class="muted"></span>
+    </div>
+    <ul id="groups"><li class="muted">No groups loaded yet.</li></ul>
+
+    <div class="rangeRow" style="margin-top:14px">
+      <label>Start<input id="rangeStart" type="datetime-local" /></label>
+      <label>End<input id="rangeEnd" type="datetime-local" /></label>
+    </div>
+    <label class="muted" style="display:block;margin-top:10px">Sender (optional)
+      <input id="rangeSender" type="text" placeholder="Filter by sender name" />
+    </label>
+    <label style="display:flex;align-items:center;gap:8px;margin-top:12px">
+      <input id="rangeSkip" type="checkbox" checked /> Skip already-downloaded files
+    </label>
+    <label class="muted" style="display:block;margin-top:10px">Download folder
+      <input id="downloadDirInput" type="text" spellcheck="false"
+             placeholder="C:\Users\You\Pictures\WhatsApp" />
+    </label>
+    <div class="row" style="margin-top:12px;align-items:center">
+      <button id="rangeDownload">Download range</button>
+      <span id="rangeProgress" class="muted"></span>
+    </div>
+  </section>
+
+  <section>
+    <h2>3 · Activity</h2>
+    <div id="log"></div>
+  </section>
+
+  <section>
+    <h2>Downloads</h2>
+    <div class="row" style="margin-bottom:12px">
+      <button id="openFolder" class="secondary">Open downloads folder</button>
+    </div>
+    <div class="stats">
+      <div class="statwrap"><span id="statSaved2" class="stat">0</span><small>saved</small></div>
+      <div class="statwrap"><span id="statSkipped2" class="stat">0</span><small>skipped</small></div>
+      <div class="statwrap"><span id="statFailed2" class="stat">0</span><small>failed</small></div>
+    </div>
+    <div class="bar"><div id="bar"></div></div>
+    <ul id="files" style="margin-top:14px"></ul>
+  </section>
+</main>
+<button id="revealFab" title="Open the latest download in Explorer">Show downloaded photos</button>
+
+<div id="closeModal" role="dialog" aria-modal="true" aria-label="Close tool">
+  <div class="close-dialog" id="closeDialog">
+    <button class="close-x" id="closeX" type="button" aria-label="Cancel">✕</button>
+    <h2>បិទកម្មវិធី?</h2>
+    <p class="muted" style="margin:0 0 4px">មុននឹងចាកចេញ… / Before you go…</p>
+    <div class="close-grid">
+      <button class="close-choice" type="button" data-kind="dont">
+        <span class="close-choice-bg"></span>
+        <span class="close-choice-label">ចង់ឃើញមុខ អ្នកអភិវឌ្ឍដែរឬទេ?🤔</span>
+      </button>
+      <button class="close-choice" type="button" data-kind="closing">
+        <span class="close-choice-bg"></span>
+        <span class="close-choice-label">បិទ កម្មវិធីជំនួយ</span>
+      </button>
+    </div>
+    <button class="secondary" id="closeCancel" type="button">Cancel</button>
+  </div>
+
+  <div class="close-final" id="closeFinal" hidden>
+    <img class="close-final-img" id="closeFinalImg" alt="" title="Open full size">
+    <div class="close-final-panel">
+      <p id="closeFinalText"></p>
+      <div class="row" style="display:flex;gap:10px;justify-content:flex-end">
+        <button class="secondary" id="closeBack" type="button">Back</button>
+        <button id="closeConfirm" type="button">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="downloadToast" role="status" aria-live="polite">
+  <div class="toast-title">Download complete</div>
+  <div class="toast-body" id="toastBody"></div>
+  <div class="toast-actions">
+    <button id="toastReveal" class="secondary">Show photos</button>
+    <button id="toastClose" class="secondary">Dismiss</button>
+  </div>
+</div>
+<script src="/waitgames.js"></script>
+<script>
+const $ = (id) => document.getElementById(id);
+let groups = [];
+let stats = { downloaded: 0, skipped: 0, failed: 0 };
+let downloadDir = '';
+let downloadDirPrefilled = false;
+// Survives filtering/re-rendering so ticks are never lost while searching.
+let selectedNames = new Set();
+
+function log(text, cls = '') {
+  const line = document.createElement('div');
+  line.className = 'logline ' + cls;
+  line.textContent = new Date().toLocaleTimeString() + '  ' + text;
+  $('log').prepend(line);
+  while ($('log').childElementCount > 300) $('log').lastChild.remove();
+}
+
+function setStatus(text, cls) {
+  const el = $('status');
+  el.textContent = text;
+  el.className = 'pill ' + cls;
+}
+
+function renderStats() {
+  $('statSaved').textContent = stats.downloaded + ' saved';
+  $('statSkipped').textContent = stats.skipped + ' skipped';
+  $('statFailed').textContent = stats.failed + ' failed';
+  $('statSaved2').textContent = stats.downloaded;
+  $('statSkipped2').textContent = stats.skipped;
+  $('statFailed2').textContent = stats.failed;
+}
+
+function renderGroups() {
+  const ul = $('groups');
+  const query = ($('groupSearch').value || '').trim().toLowerCase();
+  const visible = query
+    ? groups.filter((g) => g.name.toLowerCase().includes(query))
+    : groups;
+
+  $('groupCount').textContent = groups.length
+    ? (query ? visible.length + ' of ' + groups.length + ' chats'
+             : groups.length + ' chats')
+    : '';
+  $('tickedCount').textContent = selectedNames.size
+    ? selectedNames.size + ' ticked'
+    : 'none ticked';
+
+  ul.innerHTML = '';
+  if (!groups.length) {
+    ul.innerHTML = '<li class="muted">No group chats found.</li>';
+    return;
+  }
+  if (!visible.length) {
+    const li = document.createElement('li');
+    li.className = 'muted';
+    li.textContent = 'No chat matches “' + query + '”';
+    ul.appendChild(li);
+    return;
+  }
+  for (const g of visible) {
+    const li = document.createElement('li');
+    const cb = document.createElement('input');
+    cb.type = 'checkbox';
+    cb.value = g.name;
+    cb.checked = selectedNames.has(g.name);
+    cb.addEventListener('change', () => {
+      if (cb.checked) selectedNames.add(g.name);
+      else selectedNames.delete(g.name);
+    });
+    const span = document.createElement('span');
+    span.textContent = g.name + (g.participants ? '  (' + g.participants + ')' : '');
+    li.appendChild(cb);
+    li.appendChild(span);
+    ul.appendChild(li);
+  }
+}
+
+function initRangeDefaults() {
+  const pad = n => String(n).padStart(2, '0');
+  const fmt = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}` +
+                  `T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  const now = new Date();
+  $('rangeStart').value = fmt(new Date(now.getTime() - 7 * 86400000));
+  $('rangeEnd').value = fmt(now);
+}
+
+// ISO-8601 string in local time with an explicit offset, e.g.
+// 2026-10-14T16:58:00+07:00
+function isoWithOffset(date) {
+  const pad = n => String(n).padStart(2, '0');
+  const off = -date.getTimezoneOffset();
+  const sign = off >= 0 ? '+' : '-';
+  const abs = Math.abs(off);
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}` +
+         `T${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}` +
+         `${sign}${pad(Math.floor(abs / 60))}:${pad(abs % 60)}`;
+}
+
+function avatarPlaceholder(name) {
+  const el = document.createElement('div');
+  el.className = 'avatar';
+  el.textContent = (String(name || '?').trim()[0] || '?').toUpperCase();
+  return el;
+}
+
+function renderProfile(profile) {
+  const name = (profile && profile.name) || 'You';
+  const area = $('qrArea');
+  area.innerHTML = '';
+  const wrap = document.createElement('div');
+  wrap.className = 'profile';
+  if (profile && profile.profilePicUrl) {
+    const img = document.createElement('img');
+    img.className = 'avatar';
+    img.alt = name;
+    img.src = profile.profilePicUrl;
+    img.onerror = () => img.replaceWith(avatarPlaceholder(name));
+    wrap.appendChild(img);
+  } else {
+    wrap.appendChild(avatarPlaceholder(name));
+  }
+  const p = document.createElement('p');
+  p.className = 'profileName';
+  p.textContent = name;
+  const linked = document.createElement('p');
+  linked.className = 'muted';
+  linked.textContent = 'Linked — WhatsApp Web is connected.';
+  wrap.appendChild(p);
+  wrap.appendChild(linked);
+  area.appendChild(wrap);
+}
+
+async function loadProfile() {
+  try {
+    const res = await fetch('/api/profile');
+    const data = await res.json();
+    renderProfile(data.profile || { name: 'You' });
+  } catch (e) {
+    renderProfile({ name: 'You' });
+  }
+}
+
+function renderQr(qr) {
+  if (!qr) return;
+  const area = $('qrArea');
+  area.innerHTML = '';
+  const img = document.createElement('img');
+  img.src = '/api/qr.png?data=' + encodeURIComponent(qr);
+  area.appendChild(img);
+  const p = document.createElement('p');
+  p.className = 'muted';
+  p.textContent = 'Open WhatsApp -> Linked devices -> Link a device and scan.';
+  area.appendChild(p);
+}
+
+async function loadFiles() {
+  try {
+    const res = await fetch('/api/files');
+    const data = await res.json();
+    const ul = $('files');
+    ul.innerHTML = '';
+    for (const f of data.files.slice(0, 50)) {
+      const li = document.createElement('li');
+      li.innerHTML = '<span>' + f.group + '</span><span class="muted">' +
+        f.name + ' (' + Math.round(f.size / 1024) + ' KB)</span>';
+      ul.appendChild(li);
+    }
+  } catch (e) { /* ignore */ }
+}
+</script>
+
+<script>
+$('groupSearch').addEventListener('input', renderGroups);
+
+async function revealLatest() {
+  try {
+    const dest = ($('downloadDirInput').value || '').trim();
+    const res = await fetch('/api/reveal', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(dest ? { path: dest } : {})
+    });
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      log(data.error || 'Could not open the downloads folder', 'err');
+    }
+  } catch (e) {
+    log('Could not open the downloads folder', 'err');
+  }
+}
+
+function showReveal() {
+  $('revealFab').classList.add('show');
+}
+
+let toastTimer = null;
+function hideDownloadToast() {
+  $('downloadToast').classList.remove('show');
+  clearTimeout(toastTimer);
+  toastTimer = null;
+}
+
+function showDownloadToast(data) {
+  // While the mini-game overlay is open its own completion banner is used.
+  if (document.querySelector('#wg-overlay.wg-open')) return;
+  const parts = [];
+  if (data) {
+    parts.push(data.downloaded + ' saved');
+    if (data.skipped) parts.push(data.skipped + ' skipped');
+    if (data.failed) parts.push(data.failed + ' failed');
+  }
+  $('toastBody').textContent = parts.join(' · ');
+  $('downloadToast').classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(hideDownloadToast, 12000);
+}
+
+$('toastClose').onclick = hideDownloadToast;
+$('toastReveal').onclick = () => {
+  revealLatest();
+  hideDownloadToast();
+};
+
+$('openFolder').onclick = revealLatest;
+$('revealFab').onclick = revealLatest;
+
+// Safety net: the QR normally arrives over SSE, but poll as well so a missed
+// event (or a slow browser relaunch) still brings the login screen back.
+async function waitForLogin(maxMs = 60000) {
+  const deadline = Date.now() + maxMs;
+  while (Date.now() < deadline) {
+    try {
+      const res = await fetch('/api/status');
+      const s = await res.json();
+      if (s.ready) { loadProfile(); return; }
+      if (s.qr) {
+        renderQr(s.qr);
+        setStatus('Scan QR code', 'warn');
+        return;
+      }
+    } catch (e) { /* server restarting, retry */ }
+    await new Promise((r) => setTimeout(r, 2000));
+  }
+  $('qrArea').innerHTML =
+    '<p class="err">Could not start WhatsApp. Restart the app.</p>';
+}
+
+$('logoutBtn').onclick = async () => {
+  if (!confirm('Log out of WhatsApp? You will need to scan a QR code to link again.')) {
+    return;
+  }
+  const btn = $('logoutBtn');
+  btn.disabled = true;
+  setStatus('Logging out…', 'warn');
+  $('qrArea').innerHTML = '<p class="muted">Logging out…</p>';
+  try {
+    const res = await fetch('/api/logout', { method: 'POST' });
+    const data = await res.json();
+    if (!data.ok) {
+      log('Logout failed: ' + data.error, 'err');
+      loadProfile();
+    } else {
+      log('Logged out — scan the QR code to link again', 'ok');
+      waitForLogin();
+    }
+  } catch (e) {
+    log('Logout failed: ' + e.message, 'err');
+    loadProfile();
+  } finally {
+    btn.disabled = false;
+  }
+};
+
+$('rangeDownload').onclick = async () => {
+  if (selectedNames.size === 0) {
+    $('rangeProgress').textContent = 'Select at least one chat';
+    log('Select at least one chat', 'err');
+    return;
+  }
+  const start = new Date($('rangeStart').value);
+  const end = new Date($('rangeEnd').value);
+  if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+    log('Pick a valid start and end date', 'err');
+    return;
+  }
+  if (end < start) {
+    log('End must be after the start', 'err');
+    return;
+  }
+  const btn = $('rangeDownload');
+  btn.disabled = true;
+  const names = [...selectedNames];
+
+  // Apply the requested destination before anything is written.
+  const dest = $('downloadDirInput').value.trim();
+  if (dest) {
+    try {
+      const rs = await fetch('/api/settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ downloadDir: dest })
+      });
+      const rd = await rs.json();
+      if (!rd.ok) {
+        $('rangeProgress').textContent = rd.error || 'Invalid download folder';
+        log(rd.error || 'Invalid download folder', 'err');
+        btn.disabled = false;
+        return;
+      }
+      downloadDir = rd.downloadDir;
+      $('downloadDirInput').value = rd.downloadDir;
+      downloadDirPrefilled = true;
+    } catch (e) {
+      $('rangeProgress').textContent = 'Could not set download folder';
+      log('Could not set download folder: ' + e.message, 'err');
+      btn.disabled = false;
+      return;
+    }
+  }
+
+  try {
+    // Same persistence as the old "Save selection", minus its automatic
+    // 200-message back-fill: the date range below is the requested download.
+    const saved = await fetch('/api/groups', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ groups: names, backfill: false })
+    });
+    if (!saved.ok) log('Could not save chat selection', 'err');
+  } catch (e) {
+    log('Could not save chat selection: ' + e.message, 'err');
+  }
+  $('rangeProgress').textContent = 'Scanning history…';
+  let rangeOk = false;
+  if (window.startWaitTimer) startWaitTimer();
+  try {
+    const res = await fetch('/api/download-range', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        start: isoWithOffset(start),
+        end: isoWithOffset(end),
+        groups: names,
+        sender: $('rangeSender').value.trim(),
+        skipExisting: $('rangeSkip').checked
+      })
+    });
+    const data = await res.json();
+    if (!data.ok) {
+      $('rangeProgress').textContent = data.error || 'Failed';
+      log(data.error || 'Range download failed', 'err');
+    } else {
+      $('rangeProgress').textContent = data.downloaded + ' saved / ' + data.total + ' matched';
+      log('Range finished: ' + data.downloaded + ' saved, ' + data.skipped +
+          ' skipped, ' + data.failed + ' failed', 'ok');
+      rangeOk = true;
+      showDownloadToast(data);
+      loadFiles();
+    }
+  } catch (e) {
+    $('rangeProgress').textContent = 'Request failed';
+    log('Range request failed: ' + e.message, 'err');
+  } finally {
+    btn.disabled = false;
+    if (window.stopWaitTimer) stopWaitTimer(rangeOk);
+  }
+};
+
+$('refresh').onclick = async () => {
+  const res = await fetch('/api/groups');
+  const data = await res.json();
+  groups = data.groups;
+  selectedNames = new Set(groups.filter(g => g.selected).map(g => g.name));
+  renderGroups();
+  log('Rescanned chats: ' + groups.length + ' group(s)');
+};
+
+// Tick/untick act on what is currently shown, so the search box can narrow
+// the batch (e.g. filter, then untick everything matching).
+function visibleGroups() {
+  const query = ($('groupSearch').value || '').trim().toLowerCase();
+  return query
+    ? groups.filter(g => g.name.toLowerCase().includes(query))
+    : groups;
+}
+
+$('tickAll').onclick = () => {
+  const visible = visibleGroups();
+  visible.forEach(g => selectedNames.add(g.name));
+  renderGroups();
+  log('Ticked ' + visible.length + ' chat(s)', 'ok');
+};
+
+$('untickAll').onclick = () => {
+  const visible = visibleGroups();
+  visible.forEach(g => selectedNames.delete(g.name));
+  renderGroups();
+  log('Unticked ' + visible.length + ' chat(s)', 'ok');
+};
+
+const es = new EventSource('/api/events');
+es.onmessage = (ev) => {
+  const e = JSON.parse(ev.data);
+  switch (e.type) {
+    case 'status':
+      setStatus(e.ready ? 'Connected' : 'Not connected', e.ready ? 'ok' : 'warn');
+      groups = e.groups || [];
+      selectedNames = new Set(
+        e.selected || groups.filter(g => g.selected).map(g => g.name)
+      );
+      renderGroups();
+      if (e.ready) {
+        loadProfile();
+      } else {
+        renderQr(e.qr);
+        if (e.qr) setStatus('Scan QR code', 'warn');
+      }
+      if (e.lastDownload) showReveal();
+      break;
+    case 'qr':
+      renderQr(e.qr);
+      setStatus('Scan QR code', 'warn');
+      log('QR code received');
+      break;
+    case 'authenticated':
+      setStatus('Authenticated', 'ok');
+      log('Authenticated with WhatsApp', 'ok');
+      break;
+    case 'logged_out':
+      setStatus('Logged out', 'warn');
+      groups = [];
+      selectedNames = new Set();
+      renderGroups();
+      $('qrArea').innerHTML = '<p class="muted">Logged out — waiting for QR…</p>';
+      break;
+    case 'logout_failed':
+      $('qrArea').innerHTML =
+        '<p class="err">Could not restart WhatsApp. Restart the app.</p>';
+      break;
+    case 'ready':
+      setStatus('Connected', 'ok');
+      log('WhatsApp Web ready', 'ok');
+      loadProfile();
+      renderGroups();
+      break;
+    case 'range_start':
+      $('rangeProgress').textContent = '0/' + e.total;
+      log('Scan complete: ' + e.total + ' image(s) match the range');
+      break;
+    case 'range_progress':
+      $('rangeProgress').textContent = e.done + '/' + e.total;
+      break;
+    case 'range_done':
+      $('rangeProgress').textContent = e.downloaded + ' saved / ' + e.total + ' matched';
+      log('Download folder: ' + (downloadDir || 'downloads'), 'ok');
+      break;
+    case 'groups':
+      groups = e.groups || [];
+      selectedNames = new Set(groups.filter(g => g.selected).map(g => g.name));
+      renderGroups();
+      break;
+    case 'downloaded':
+      log('Saved ' + e.file, 'ok');
+      loadFiles();
+      showReveal();
+      break;
+    case 'message':
+      log('New ' + e.mediaType + ' in ' + e.group + ' from ' + (e.sender || '?'));
+      break;
+    case 'error':
+      log(e.message, 'err');
+      break;
+  }
+};
+
+setInterval(async () => {
+  try {
+    const res = await fetch('/api/status');
+    const s = await res.json();
+    if (s.stats) { stats = s.stats; renderStats(); }
+    if (s.downloadDir) {
+      downloadDir = s.downloadDir;
+      if (!downloadDirPrefilled) {
+        $('downloadDirInput').value = s.downloadDir;
+        downloadDirPrefilled = true;
+      }
+    }
+    if (s.lastDownload) showReveal();
+    setStatus(s.ready ? 'Connected' : 'Not connected', s.ready ? 'ok' : 'warn');
+  } catch (e) { /* ignore */ }
+}, 2000);
+
+function applyTheme(theme) {
+  document.documentElement.dataset.theme = theme;
+  try { localStorage.setItem('theme', theme); } catch (e) { /* private mode */ }
+  $('themeToggle').textContent = theme === 'light' ? '🌙 Dark' : '☀ Light';
+}
+
+$('themeToggle').onclick = () => {
+  applyTheme(
+    document.documentElement.dataset.theme === 'light' ? 'dark' : 'light'
+  );
+};
+
+const closePhotos = { dont: [], closing: [] };
+let closeKind = null;
+
+function pickClosePhoto(kind) {
+  const list = closePhotos[kind] || [];
+  return list.length ? list[Math.floor(Math.random() * list.length)] : null;
+}
+
+function setPhotoBg(el, url) {
+  el.style.backgroundImage = url
+    ? 'linear-gradient(rgba(0,0,0,.15), rgba(0,0,0,.35)), url("' + url + '")'
+    : 'linear-gradient(135deg,#22303a,#0f1417)';
+}
+
+async function loadClosePhotos() {
+  for (const kind of ['dont', 'closing']) {
+    try {
+      const res = await fetch('/api/close-photos?kind=' + kind);
+      const data = await res.json();
+      closePhotos[kind] = data.photos || [];
+    } catch (e) {
+      closePhotos[kind] = [];
+    }
+  }
+}
+
+async function openCloseModal() {
+  $('closeModal').classList.add('show');
+  $('closeDialog').hidden = false;
+  $('closeFinal').hidden = true;
+  await loadClosePhotos();
+  document.querySelectorAll('.close-choice').forEach((btn) => {
+    setPhotoBg(
+      btn.querySelector('.close-choice-bg'),
+      pickClosePhoto(btn.dataset.kind)
+    );
+  });
+}
+
+function closeModal() {
+  $('closeModal').classList.remove('show');
+}
+
+$('closeAppBtn').onclick = openCloseModal;
+$('closeX').onclick = closeModal;
+$('closeCancel').onclick = closeModal;
+$('closeModal').addEventListener('click', (e) => {
+  if (e.target === $('closeModal')) closeModal();
+});
+
+document.querySelectorAll('.close-choice').forEach((btn) => {
+  btn.onclick = () => {
+    closeKind = btn.dataset.kind;
+    $('closeDialog').hidden = true;
+    $('closeFinal').hidden = false;
+    $('closeFinalText').textContent =
+      closeKind === 'dont'
+        ? 'ចង់ឃើញមុខ អ្នកអភិវឌ្ឍដែរឬទេ?🤔'
+        : 'បិទ កម្មវិធីជំនួយ';
+    const photo = pickClosePhoto(closeKind);
+    const img = $('closeFinalImg');
+    if (photo) {
+      img.src = photo;
+      img.style.display = 'block';
+    } else {
+      img.removeAttribute('src');
+      img.style.display = 'none';
+    }
+  };
+});
+
+$('closeFinalImg').onclick = () => {
+  const src = $('closeFinalImg').src;
+  if (src) window.open(src, '_blank', 'noopener');
+};
+
+$('closeBack').onclick = () => {
+  $('closeFinal').hidden = true;
+  $('closeDialog').hidden = false;
+};
+
+$('closeConfirm').onclick = async () => {
+  const btn = $('closeConfirm');
+  btn.disabled = true;
+  btn.textContent = 'Closing…';
+  try {
+    await fetch('/api/shutdown', { method: 'POST' });
+  } catch (e) {
+    /* server already down */
+  }
+  try {
+    window.open('', '_self');
+    window.close();
+  } catch (e) {
+    /* browsers block closing tabs not opened by script */
+  }
+  $('closeFinalText').textContent =
+    'កម្មវិធីត្រូវបានបិទ — You can close this tab.';
+  btn.hidden = true;
+  $('closeBack').hidden = true;
+
+  // If the browser refused window.close(), make it obvious the server is down.
+  setTimeout(() => {
+    document.body.innerHTML = `
+      <div style="min-height:100vh;display:flex;align-items:center;justify-content:center;background:#0f1417;color:#e9edef;font-family:'Segoe UI',system-ui,sans-serif;text-align:center;padding:24px">
+        <div>
+          <h1 style="font-size:20px;margin:0 0 10px">Tool closed</h1>
+          <p style="color:#8696a0;margin:0">Start it again with <code>npm start</code>, then open <code>http://localhost:3000</code>.</p>
+        </div>
+      </div>`;
+  }, 1000);
+};
+
+applyTheme(document.documentElement.dataset.theme || 'dark');
+showReveal();
+renderStats();
+initRangeDefaults();
+loadFiles();
+</script>
+
+</body>
+</html>
+
