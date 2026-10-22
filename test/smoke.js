@@ -173,7 +173,7 @@ const fakeMessage = {
             { id: 'g1', name: 'Test Group', participants: 3, selected: true },
         ],
         selectedGroups: new Set(['Test Group']),
-        config: dlCfg,
+        config: { ...dlCfg, password: '' },
         downloader,
         events: [],
         subscribe: (fn) => {
