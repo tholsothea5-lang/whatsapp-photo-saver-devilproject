@@ -6,6 +6,7 @@ const { spawn } = require('child_process');
 const express = require('express');
 const QRCode = require('qrcode');
 const { logger } = require('./logger');
+const { createPasswordGate } = require('./password');
 
 /**
  * Open a file or folder in the OS file manager, refusing anything outside the
@@ -59,6 +60,13 @@ function revealInFileManager(target, rootDir) {
 function createServer(monitor) {
     const app = express();
     app.use(express.json());
+    app.use(express.urlencoded({ extended: true }));
+
+    // Password gate (active only when config.password is set) must come before
+    // every route and static folder - including the personal photo dirs below.
+    const passwordGate = createPasswordGate(monitor.config);
+    app.use(passwordGate);
+
     app.use(express.static(path.join(__dirname, '..', 'public')));
     app.use(
         '/close-photos/dont',

@@ -3,6 +3,7 @@
   "sessionDir": "./.wwebjs_auth",
   "stateFile": "./.state.json",
   "port": 3000,
+  "password": "",
   "groupNames": [],
   "includeImages": true,
   "includeVideos": true,

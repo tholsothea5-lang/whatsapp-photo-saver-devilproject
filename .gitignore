@@ -13,6 +13,9 @@ downloads/
 closing photos/
 dont want to close photos/
 
+# Portable tunnel helper (downloaded by share.bat)
+tools/
+
 # --- Dependencies & builds ---
 node_modules/
 

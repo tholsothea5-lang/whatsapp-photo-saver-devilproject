@@ -63,6 +63,21 @@ saved automatically).
 
 > On PowerShell you may need `npm.cmd start` if script execution is disabled.
 
+## Share with coworkers (no install for them)
+
+1. Set a password in `config.json` (`"password": "our-team-code"`) — **do this
+   first**, otherwise whoever gets the link can change the group selection.
+2. Start the app (`start.bat` / `npm start`).
+3. Run `share.bat` — it opens a free Cloudflare HTTPS tunnel on your PC and
+   prints a `https://<something>.trycloudflare.com` link. Anyone can open
+   that link, sign in with the password, and use the app in their browser.
+   The link changes each time you run `share.bat`; close the window to stop
+   sharing. No system-wide install: `cloudflared.exe` sits in `tools/`.
+
+The photos themselves keep landing in the download folder on the machine
+running the app — point `downloadDir` at a network/OneDrive folder if the
+team should see the files directly.
+
 ## Configuration
 
 `config.json` is optional – the app ships with sensible defaults (see
