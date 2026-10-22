@@ -31,10 +31,23 @@ saves every image (and optionally video) to disk.
 
 ## Requirements
 
-- Node.js 18+
-- Google Chrome installed (Puppeteer drives it in headless mode)
+- Node.js 18+ ([nodejs.org](https://nodejs.org)) — that's it. A dedicated
+  Chromium is downloaded automatically on first install; you don't need
+  Google Chrome or any other browser.
 
-## Install & run
+## Quick start (from the GitHub repo)
+
+```bash
+git clone https://github.com/tholsothea5/whatsapp-photo-saver.git
+cd whatsapp-photo-saver
+```
+
+**Windows:** double-click `start.bat` — it installs everything on first
+run, then starts the app.
+
+**macOS / Linux:** run `sh start.sh`.
+
+Or the classic way:
 
 ```bash
 npm install
@@ -108,6 +121,7 @@ deduplication and the HTTP API.
 
 ```
 index.js            entry point (starts the web server + WhatsApp client)
+start.bat / start.sh easy-start scripts (install on first run, then start)
 src/config.js       configuration loading
 src/logger.js       small colored logger (CommonJS friendly)
 src/media.js        album resolution + encrypted media download/decrypt

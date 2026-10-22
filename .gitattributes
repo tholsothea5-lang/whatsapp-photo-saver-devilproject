@@ -1,0 +1,5 @@
+# Use LF for shell scripts (CRLF breaks them on Linux/macOS),
+# CRLF for Windows batch files.
+* text=auto
+start.sh text eol=lf
+*.bat text eol=crlf
