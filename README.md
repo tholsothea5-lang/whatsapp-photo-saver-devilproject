@@ -38,8 +38,8 @@ saves every image (and optionally video) to disk.
 ## Quick start (from the GitHub repo)
 
 ```bash
-git clone https://github.com/tholsothea5/whatsapp-photo-saver.git
-cd whatsapp-photo-saver
+git clone https://github.com/tholsothea5-lang/whatsapp-photo-saver-devilproject.git
+cd whatsapp-photo-saver-devilproject
 ```
 
 **Windows:** double-click `start.bat` — it installs everything on first
