@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WhatsApp Photo Saver — One-click install</title>
+<meta name="description" content="Automatically download photos from your WhatsApp groups. One-click install for Windows — everything stays on your own computer.">
+<style>
+  :root{
+    --bg:#0b0f10; --panel:#131a1c; --panel2:#182124; --line:#243034;
+    --text:#e8f0f0; --muted:#9ab3b3; --green:#28d86b; --green-dk:#1dab52;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--bg);color:var(--text);font-family:"Segoe UI",system-ui,-apple-system,Arial,sans-serif;line-height:1.6}
+  .wrap{max-width:860px;margin:0 auto;padding:48px 24px 80px}
+  h1{font-size:2.2rem;letter-spacing:-.5px}
+  h1 .app{color:#fff}
+  h1 .saver{color:var(--green)}
+  .tag{color:var(--muted);font-size:1.15rem;margin-top:10px;max-width:40rem}
+  .badges{margin-top:18px;display:flex;gap:10px;flex-wrap:wrap}
+  .badge{background:var(--panel);border:1px solid var(--line);color:var(--muted);font-size:.8rem;padding:4px 12px;border-radius:99px}
+  .steps{margin-top:44px;display:flex;flex-direction:column;gap:18px}
+  .step{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:22px 24px;display:flex;gap:20px;align-items:flex-start}
+  .num{flex:none;width:38px;height:38px;border-radius:50%;background:var(--green);color:#04170b;font-weight:700;display:flex;align-items:center;justify-content:center;font-size:1.1rem;margin-top:2px}
+  .step h2{font-size:1.15rem;margin-bottom:4px}
+  .step p{color:var(--muted)}
+  .step code{background:var(--panel2);border:1px solid var(--line);padding:2px 7px;border-radius:6px;font-size:.9em;color:#cfe8d8}
+  .btn{display:inline-flex;align-items:center;gap:10px;background:var(--green);color:#04170b;font-weight:700;padding:12px 22px;border-radius:10px;text-decoration:none;font-size:1rem;margin-top:12px;transition:background .15s}
+  .btn:hover{background:#3ae07f}
+  .btn.ghost{background:var(--panel2);color:var(--text);border:1px solid var(--line)}
+  .btn.ghost:hover{background:#1f2b30}
+  .btn small{font-weight:400;opacity:.75}
+  .note{margin-top:40px;background:linear-gradient(180deg,var(--panel),var(--panel2));border:1px solid var(--line);border-radius:14px;padding:22px 26px}
+  .note h2{font-size:1.05rem;margin-bottom:10px;color:#cfe8d8}
+  .note ul{list-style:none;display:grid;gap:8px}
+  .note li{color:var(--muted);padding-left:26px;position:relative}
+  .note li::before{content:"✓";position:absolute;left:0;color:var(--green);font-weight:700}
+  .warn{margin-top:18px;border-left:3px solid #e0b428;padding:10px 16px;color:#d8c47a;background:#1a1608;border-radius:8px;font-size:.92rem}
+  .foot{margin-top:48px;color:#5a7070;font-size:.85rem;display:flex;gap:16px;flex-wrap:wrap}
+  .foot a{color:#7fbf9a;text-decoration:none}
+  .foot a:hover{text-decoration:underline}
+  @media(max-width:560px){.step{flex-direction:column;gap:10px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1><span class="app">WhatsApp</span> <span class="saver">Photo Saver</span></h1>
+  <p class="tag">Automatically saves photos from the WhatsApp groups you choose — straight to a folder on <strong>your own computer</strong>. No account sharing, no cloud storage.</p>
+  <div class="badges">
+    <span class="badge">Windows 10 / 11</span>
+    <span class="badge">Free · MIT licence</span>
+    <span class="badge">100% local data</span>
+  </div>
+
+  <div class="steps">
+    <div class="step">
+      <div class="num">1</div>
+      <div>
+        <h2>Install Node.js <span style="color:var(--muted);font-weight:400">(only if you don't have it)</span></h2>
+        <p>Download the <strong>LTS</strong> version, install it with all defaults, then come back.
+        The setup below checks automatically and opens this page for you if it's missing.</p>
+        <a class="btn ghost" href="https://nodejs.org/en/download" target="_blank" rel="noopener">Get Node.js <small>(nodejs.org)</small></a>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="num">2</div>
+      <div>
+        <h2>Download the installer</h2>
+        <p>One small file (<code>setup.bat</code>). It downloads the app, installs everything and starts it — you'll just double-click it in the next step.</p>
+        <a class="btn" href="https://github.com/tholsothea5-lang/whatsapp-photo-saver-devilproject/raw/main/setup.bat" download>⬇ Download setup.bat</a>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="num">3</div>
+      <div>
+        <h2>Double-click <code>setup.bat</code></h2>
+        <p>Sit back — it can take a few minutes on first run (it downloads the app and its browser engine).
+        Your web browser will open at <code>http://localhost:3000</code> when it's ready.</p>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="num">4</div>
+      <div>
+        <h2>Link WhatsApp once</h2>
+        <p>In the app, go to <strong>WhatsApp → Settings → Linked devices → Link a device</strong> on your phone and scan the QR code shown.
+        Then tick the groups you want to watch — photos start arriving in your <code>downloads</code> folder automatically.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="note">
+    <h2>What stays on your own computer — always</h2>
+    <ul>
+      <li>Your WhatsApp login (a QR-linked session on this PC only — unlink any time from your phone)</li>
+      <li>Every downloaded photo, in the app's <code>downloads</code> folder (you pick the folder)</li>
+      <li>Your settings and the list of groups you selected</li>
+    </ul>
+    <p style="color:var(--muted);margin-top:10px">Nothing is uploaded to any server. The app talks directly between your PC, the website and WhatsApp.</p>
+    <div class="warn">Heads-up: this unofficial automation may violate WhatsApp's Terms of Service — use it with your own account, at your own risk. If WhatsApp adds a built-in download or an official API for this, prefer that.</div>
+  </div>
+
+  <div class="foot">
+    <a href="https://github.com/tholsothea5-lang/whatsapp-photo-saver-devilproject" target="_blank" rel="noopener">Source code on GitHub</a>
+    <a href="https://github.com/tholsothea5-lang/whatsapp-photo-saver-devilproject/blob/main/README.md" target="_blank" rel="noopener">Full manual</a>
+    <a href="https://github.com/tholsothea5-lang/whatsapp-photo-saver-devilproject/blob/main/LICENSE" target="_blank" rel="noopener">MIT Licence</a>
+  </div>
+</div>
+</body>
+</html>

@@ -1,5 +1,8 @@
 # WhatsApp Photo Saver
 
+> **Easiest install (Windows):** open the [one-click setup page](https://tholsothea5-lang.github.io/whatsapp-photo-saver-devilproject/)
+> and follow the 4 steps — no git or command line needed.
+
 Automatically downloads photos from selected WhatsApp group chats via WhatsApp Web.
 
 The app drives a headless Chrome instance with [`whatsapp-web.js`](https://github.com/pedroslopez/whatsapp-web.js),

@@ -1,5 +1,6 @@
-# Use LF for shell scripts (CRLF breaks them on Linux/macOS),
-# CRLF for Windows batch files.
+# Use LF for shell scripts (CRLF breaks them on Linux/macOS).
+# Batch files: no conversion at all - raw downloads must keep CRLF for cmd.exe.
 * text=auto
 start.sh text eol=lf
-*.bat text eol=crlf
+*.bat -text
+*.cmd -text
